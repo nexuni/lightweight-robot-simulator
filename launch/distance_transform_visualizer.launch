@@ -1,5 +1,5 @@
 <launch>
-  <node pkg="racecar_simulator" name="distance_transform_visualizer" type="distance_transform_visualizer" output="screen">
-    <rosparam command="load" file="$(find racecar_simulator)/params.yaml"/>
+  <node pkg="lightweight_robot_simulator" name="distance_transform_visualizer" type="distance_transform_visualizer" output="screen">
+    <rosparam command="load" file="$(find lightweight_robot_simulator)/params.yaml"/>
   </node>
 </launch>

@@ -1,9 +1,9 @@
 #include <ros/ros.h>
 #include <nav_msgs/OccupancyGrid.h>
 
-#include "racecar_simulator/distance_transform.hpp"
+#include "lightweight_robot_simulator/distance_transform.hpp"
 
-using namespace racecar_simulator;
+using namespace lightweight_robot_simulator;
 
 class DistanceTransformVisualizer {
   private:

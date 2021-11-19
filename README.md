@@ -1,4 +1,4 @@
-# Racecar Simulator
+# Lightweight Robot Simulator
 
 This is a lightweight 2D simulator of the MIT Racecar.
 It can be built with ROS, or it can be used as a standalone C++ library.
@@ -25,7 +25,7 @@ The full list of dependencies can be found in the ```package.xml``` file.
 To install the simulator package, clone it into your catkin workspace:
 
     cd ~/catkin_ws/src
-    git clone https://github.com/mit-racecar/racecar_simulator.git
+    git clone https://github.com/mit-racecar/lightweight_robot_simulator.git
     
 Then run ```catkin_make``` to build it:
 
@@ -37,7 +37,7 @@ Then run ```catkin_make``` to build it:
 
 To run the simulator on its own, run:
 
-    roslaunch racecar_simulator simulate.launch
+    roslaunch lightweight_robot_simulator simulate.launch
 
 This will launch everything you need for a full simulation; roscore, the simulator, a preselected map, a model of the racecar and the joystick server.
 

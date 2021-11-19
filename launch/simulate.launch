@@ -3,14 +3,14 @@
   <node pkg="joy" name="joy_node" type="joy_node"/>
 
   <!-- Launch a map from the maps folder-->
-  <arg name="map" default="$(find racecar_simulator)/maps/building_31.yaml"/>
+  <arg name="map" default="$(find lightweight_robot_simulator)/maps/building_31.yaml"/>
   <node pkg="map_server" name="map_server" type="map_server" args="$(arg map)"/>
 
   <!-- Launch the racecar model -->
-  <include file="$(find racecar_simulator)/launch/racecar_model.launch"/>
+  <include file="$(find lightweight_robot_simulator)/launch/robot_model.launch"/>
 
   <!-- Begin the simulator with the parameters from params.yaml -->
-  <node pkg="racecar_simulator" name="racecar_simulator" type="simulate" output="screen">
-    <rosparam command="load" file="$(find racecar_simulator)/params.yaml"/>
+  <node pkg="lightweight_robot_simulator" name="lightweight_robot_simulator" type="simulate" output="screen">
+    <rosparam command="load" file="$(find lightweight_robot_simulator)/params.yaml"/>
   </node>
 </launch>

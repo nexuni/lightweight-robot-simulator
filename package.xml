@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>racecar_simulator</name>
+  <name>lightweight_robot_simulator</name>
   <version>0.0.0</version>
   <description>A simulator of the MIT racecar.</description>
 

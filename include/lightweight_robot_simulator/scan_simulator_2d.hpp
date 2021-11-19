@@ -2,9 +2,9 @@
 
 #include <random>
 
-#include "racecar_simulator/pose_2d.hpp"
+#include "lightweight_robot_simulator/pose_2d.hpp"
 
-namespace racecar_simulator {
+namespace lightweight_robot_simulator {
 
 class ScanSimulator2D {
 

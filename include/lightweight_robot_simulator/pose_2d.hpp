@@ -1,6 +1,6 @@
 #pragma once
 
-namespace racecar_simulator {
+namespace lightweight_robot_simulator {
 
 struct Pose2D {
     double x;

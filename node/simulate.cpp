@@ -10,11 +10,11 @@
 #include <sensor_msgs/Joy.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 
-#include "racecar_simulator/pose_2d.hpp"
-#include "racecar_simulator/ackermann_kinematics.hpp"
-#include "racecar_simulator/scan_simulator_2d.hpp"
+#include "lightweight_robot_simulator/pose_2d.hpp"
+#include "lightweight_robot_simulator/ackermann_kinematics.hpp"
+#include "lightweight_robot_simulator/scan_simulator_2d.hpp"
 
-using namespace racecar_simulator;
+using namespace lightweight_robot_simulator;
 
 class RacecarSimulator {
   private:
@@ -346,7 +346,7 @@ class RacecarSimulator {
 };
 
 int main(int argc, char ** argv) {
-  ros::init(argc, argv, "racecar_simulator");
+  ros::init(argc, argv, "lightweight_robot_simulator");
   RacecarSimulator rs;
   ros::spin();
   return 0;

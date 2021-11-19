@@ -3,7 +3,7 @@
 #include <vector>
 #include <limits>
 
-namespace racecar_simulator {
+namespace lightweight_robot_simulator {
 
 class DistanceTransform {
 

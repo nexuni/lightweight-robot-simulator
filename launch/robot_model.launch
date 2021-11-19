@@ -1,0 +1,8 @@
+<launch>
+  <!-- Open the model file -->
+  <arg name="robot_xacro" default="$(find weibot_description)/urdf/smartbin-v1.xacro"/>
+  <param name="robot_description" command="xacro --inorder '$(arg robot_xacro)'"/>
+
+  <!-- Add the transformations -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+</launch>
