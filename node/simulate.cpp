@@ -16,7 +16,7 @@
 
 using namespace lightweight_robot_simulator;
 
-class RacecarSimulator {
+class RobotSimulator {
   private:
     // The transformation frames used
     std::string map_frame, base_frame, scan_frame;
@@ -72,7 +72,7 @@ class RacecarSimulator {
 
   public:
 
-    RacecarSimulator() {
+    RobotSimulator() {
       // Initialize the node handle
       n = ros::NodeHandle("~");
 
@@ -142,22 +142,22 @@ class RacecarSimulator {
       odom_pub = n.advertise<nav_msgs::Odometry>(odom_topic, 1);
 
       // Start a timer to output the pose
-      update_pose_timer = n.createTimer(ros::Duration(update_pose_rate), &RacecarSimulator::update_pose, this);
+      update_pose_timer = n.createTimer(ros::Duration(update_pose_rate), &RobotSimulator::update_pose, this);
 
       // If the joystick is enabled
       if (joy)
         // Start a subscriber to listen to joystick commands
-        joy_sub = n.subscribe(joy_topic, 1, &RacecarSimulator::joy_callback, this);
+        joy_sub = n.subscribe(joy_topic, 1, &RobotSimulator::joy_callback, this);
 
       // Start a subscriber to listen to drive commands
-      drive_sub = n.subscribe(drive_topic, 1, &RacecarSimulator::drive_callback, this);
+      drive_sub = n.subscribe(drive_topic, 1, &RobotSimulator::drive_callback, this);
 
       // Start a subscriber to listen to new maps
-      map_sub = n.subscribe(map_topic, 1, &RacecarSimulator::map_callback, this);
+      map_sub = n.subscribe(map_topic, 1, &RobotSimulator::map_callback, this);
 
       // Start a subscriber to listen to pose messages
-      pose_sub = n.subscribe(pose_topic, 1, &RacecarSimulator::pose_callback, this);
-      pose_rviz_sub = n.subscribe(pose_rviz_topic, 1, &RacecarSimulator::pose_rviz_callback, this);
+      pose_sub = n.subscribe(pose_topic, 1, &RobotSimulator::pose_callback, this);
+      pose_rviz_sub = n.subscribe(pose_rviz_topic, 1, &RobotSimulator::pose_rviz_callback, this);
     }
 
     void update_pose(const ros::TimerEvent&) {
@@ -347,7 +347,7 @@ class RacecarSimulator {
 
 int main(int argc, char ** argv) {
   ros::init(argc, argv, "lightweight_robot_simulator");
-  RacecarSimulator rs;
+  RobotSimulator rs;
   ros::spin();
   return 0;
 }
