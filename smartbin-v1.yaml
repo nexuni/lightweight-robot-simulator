@@ -9,13 +9,17 @@ max_steering_angle: 0.494 # radians
 # The rate at which the pose and the lidar publish
 update_pose_rate: 0.02
 
-# Lidar simulation parameters
-scan_beams: 100
-scan_field_of_view: 4.71 # radians
+# The distance from the center of the
+# rear axis (base_link) to the lidar
+scan_distance_to_base_link: 0.464 # meters
 
 # The distance from the center of the
 # rear axis (base_link) to the lidar
-scan_distance_to_base_link: 0.275 # meters
+scan2_distance_to_base_link: 0.026 # meters
+
+# Lidar simulation parameters
+scan_beams: 400
+scan_field_of_view: 3.14 # radians
 
 # The standard deviation of the noise applied
 # to the lidar simulation
@@ -37,7 +41,8 @@ joy_topic: "/joy"
 drive_topic: "/drive"
 map_topic: "/map"
 distance_transform_topic: "/dt"
-scan_topic: "/scan"
+scan_topic: "/front_scan"
+scan2_topic: "/back_scan"
 pose_topic: "/pose"
 odom_topic: "/odom"
 pose_rviz_topic: "/initialpose"
@@ -46,6 +51,7 @@ pose_rviz_topic: "/initialpose"
 map_frame: "map"
 base_frame: "base_link"
 scan_frame: "laser"
+scan2_frame: "laser2"
 
 # Turn this off for mapping
 broadcast_transform: true

@@ -10,18 +10,36 @@
   <!-- <include file="$(find lightweight_robot_simulator)/launch/robot_model.launch"/> -->
 
   <!-- Open the model file -->
-  <arg name="robot_xacro" default="$(find weibot_description)/urdf/smartbin-v1.xacro"/>
+  <arg name="robot_xacro" default="$(find weibot_description)/urdf/smartbin-v1-gazebo.xacro"/>
   <param name="robot_description" command="$(find xacro)/xacro --inorder '$(arg robot_xacro)'"/>
+
+  <!-- overwriting these args -->
+  <arg name="debug" default="false" />
+  <arg name="gui" default="true" />
+  <arg name="pause" default="false" />
+  <arg name="world" default="$(find weibot_gazebo_sim)/world/store.world" /><!-- /usr/share/gazebo-9/worlds/cafe.world --> <!-- $(find weibot_gazebo_sim)/world/store.world -->
+
+  <!-- include gazebo_ros launcher -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+      <arg name="world_name" value="$(arg world)" />
+      <arg name="debug" value="$(arg debug)" />
+      <arg name="gui" value="$(arg gui)" />
+      <arg name="paused" value="$(arg pause)" />
+      <arg name="use_sim_time" value="true" />
+  </include>
 
   <!-- Begin the simulator with the parameters from smartbin-v1.yaml -->
   <node pkg="lightweight_robot_simulator" name="lightweight_robot_simulator" type="simulate" output="screen">
     <rosparam command="load" file="$(find lightweight_robot_simulator)/smartbin-v1.yaml"/>
   </node>
 
+  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model"
+    args="-param robot_description -urdf -model smartbin"/>
+
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
     <param name="publish_frequency" value="20.0"/>
   </node>
 
-  <node pkg="map_server" name="map_server" type="map_server" args="$(arg map)"/>
+  <node pkg="map_server" name="map_server" type="map_server" args="$(arg doday_map)"/>
 
 </launch>

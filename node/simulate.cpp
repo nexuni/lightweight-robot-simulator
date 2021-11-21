@@ -19,7 +19,7 @@ using namespace lightweight_robot_simulator;
 class RobotSimulator {
   private:
     // The transformation frames used
-    std::string map_frame, base_frame, scan_frame;
+    std::string map_frame, base_frame, scan_frame, scan2_frame;
 
     // The car state and parameters
     Pose2D pose;
@@ -28,10 +28,11 @@ class RobotSimulator {
     double steering_angle;
     double previous_seconds;
     double scan_distance_to_base_link;
+    double scan2_distance_to_base_link;
     double max_speed, max_steering_angle;
 
     // A simulator of the laser
-    ScanSimulator2D scan_simulator;
+    ScanSimulator2D scan_simulator, scan2_simulator;
     double map_free_threshold;
 
     // Joystick parameters
@@ -62,6 +63,7 @@ class RobotSimulator {
     // Publish a scan, odometry, and imu data
     bool broadcast_transform;
     ros::Publisher scan_pub;
+    ros::Publisher scan2_pub;
     ros::Publisher odom_pub;
 
     // Noise to add to odom sensor
@@ -84,11 +86,12 @@ class RobotSimulator {
 
       // Get the topic names
       std::string joy_topic, drive_topic, map_topic, 
-        scan_topic, pose_topic, pose_rviz_topic, odom_topic;
+        scan_topic, pose_topic, pose_rviz_topic, odom_topic, scan2_topic;
       n.getParam("joy_topic", joy_topic);
       n.getParam("drive_topic", drive_topic);
       n.getParam("map_topic", map_topic);
       n.getParam("scan_topic", scan_topic);
+      n.getParam("scan2_topic", scan2_topic);
       n.getParam("pose_topic", pose_topic);
       n.getParam("odom_topic", odom_topic);
       n.getParam("pose_rviz_topic", pose_rviz_topic);
@@ -97,6 +100,7 @@ class RobotSimulator {
       n.getParam("map_frame", map_frame);
       n.getParam("base_frame", base_frame);
       n.getParam("scan_frame", scan_frame);
+      n.getParam("scan2_frame", scan2_frame);
 
       // Fetch the car parameters
       int scan_beams;
@@ -108,6 +112,7 @@ class RobotSimulator {
       n.getParam("scan_std_dev", scan_std_dev);
       n.getParam("map_free_threshold", map_free_threshold);
       n.getParam("scan_distance_to_base_link", scan_distance_to_base_link);
+      n.getParam("scan2_distance_to_base_link", scan2_distance_to_base_link);
       n.getParam("max_speed", max_speed);
       n.getParam("max_steering_angle", max_steering_angle);
 
@@ -127,6 +132,11 @@ class RobotSimulator {
           scan_field_of_view,
           scan_std_dev);
 
+      scan2_simulator = ScanSimulator2D(
+          scan_beams,
+          scan_field_of_view,
+          scan_std_dev);
+
       // Noise to add to Odometry twist
       n.getParam("mu_twist", mu_twist);
       noise_generator = std::mt19937(std::random_device{}());
@@ -137,6 +147,7 @@ class RobotSimulator {
 
       // Make a publisher for laser scan messages
       scan_pub = n.advertise<sensor_msgs::LaserScan>(scan_topic, 1);
+      scan2_pub = n.advertise<sensor_msgs::LaserScan>(scan2_topic, 1);
 
       // Make a publisher for odometry messages
       odom_pub = n.advertise<nav_msgs::Odometry>(odom_topic, 1);
@@ -258,6 +269,46 @@ class RobotSimulator {
         scan_ts.header.frame_id = base_frame;
         scan_ts.child_frame_id = scan_frame;
         br.sendTransform(scan_ts);
+
+        // Do it for a second scan
+        // Get the pose of the lidar, given the pose of base link
+        // (base link is the center of the rear axle)
+        Pose2D scan2_pose;
+        scan2_pose.x = pose.x + scan2_distance_to_base_link * std::cos(pose.theta);
+        scan2_pose.y = pose.y + scan2_distance_to_base_link * std::sin(pose.theta);
+        scan2_pose.theta = pose.theta + 3.14159;
+
+        // Compute the scan from the lidar
+        std::vector<double> scan2 = scan2_simulator.scan(scan2_pose);
+
+        // Convert to float
+        std::vector<float> scan2_(scan2.size());
+        for (size_t i = 0; i < scan2.size(); i++)
+          scan2_[i] = scan2[i];
+
+        // Publish the laser message
+        sensor_msgs::LaserScan scan2_msg;
+        scan2_msg.header.stamp = timestamp;
+        scan2_msg.header.frame_id = scan2_frame;
+        scan2_msg.angle_min = -scan2_simulator.get_field_of_view()/2.;
+        scan2_msg.angle_max =  scan2_simulator.get_field_of_view()/2.;
+        scan2_msg.angle_increment = scan2_simulator.get_angle_increment();
+        scan2_msg.range_max = 100;
+        scan2_msg.ranges = scan2_;
+        scan2_msg.intensities = scan2_;
+
+        scan2_pub.publish(scan2_msg);
+
+        // Publish a transformation between base link and laser
+        geometry_msgs::TransformStamped scan2_ts;
+        scan2_ts.transform.translation.x = scan2_distance_to_base_link;
+        scan2_ts.transform.rotation.z = 1;
+        scan2_ts.transform.rotation.w = 0;
+        scan2_ts.header.stamp = timestamp;
+        scan2_ts.header.frame_id = base_frame;
+        scan2_ts.child_frame_id = scan2_frame;
+        br.sendTransform(scan2_ts);
+
       }
     }
 
@@ -335,6 +386,13 @@ class RobotSimulator {
 
       // Send the map to the scanner
       scan_simulator.set_map(
+          map,
+          height,
+          width,
+          resolution,
+          origin,
+          map_free_threshold);
+      scan2_simulator.set_map(
           map,
           height,
           width,
