@@ -9,10 +9,13 @@
 #include <sensor_msgs/LaserScan.h>
 #include <sensor_msgs/Joy.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <geometry_msgs/PointStamped.h>
+#include <geometry_msgs/Point32.h>
 
 #include "lightweight_robot_simulator/pose_2d.hpp"
 #include "lightweight_robot_simulator/ackermann_kinematics.hpp"
 #include "lightweight_robot_simulator/scan_simulator_2d.hpp"
+#include "lightweight_robot_simulator/obstacle_simulator.hpp"
 
 using namespace lightweight_robot_simulator;
 
@@ -30,9 +33,11 @@ class RobotSimulator {
     double scan_distance_to_base_link;
     double scan2_distance_to_base_link;
     double max_speed, max_steering_angle;
+    double obstacle_radius, obstacle_moving_speed;
 
     // A simulator of the laser
     ScanSimulator2D scan_simulator, scan2_simulator;
+    ObstacleSimulator obstacle_simulator;
     double map_free_threshold;
 
     // Joystick parameters
@@ -59,12 +64,14 @@ class RobotSimulator {
     // Listen for updates to the pose
     ros::Subscriber pose_sub;
     ros::Subscriber pose_rviz_sub;
+    ros::Subscriber obstacle_rviz_sub;
 
     // Publish a scan, odometry, and imu data
     bool broadcast_transform;
     ros::Publisher scan_pub;
     ros::Publisher scan2_pub;
     ros::Publisher odom_pub;
+    ros::Publisher obstacle_pub;
 
     // Noise to add to odom sensor
     std::mt19937 noise_generator;    
@@ -86,7 +93,8 @@ class RobotSimulator {
 
       // Get the topic names
       std::string joy_topic, drive_topic, map_topic, 
-        scan_topic, pose_topic, pose_rviz_topic, odom_topic, scan2_topic;
+        scan_topic, pose_topic, pose_rviz_topic, odom_topic, scan2_topic, 
+        static_obstacle_topic, obstacle_pub_topic;
       n.getParam("joy_topic", joy_topic);
       n.getParam("drive_topic", drive_topic);
       n.getParam("map_topic", map_topic);
@@ -95,6 +103,8 @@ class RobotSimulator {
       n.getParam("pose_topic", pose_topic);
       n.getParam("odom_topic", odom_topic);
       n.getParam("pose_rviz_topic", pose_rviz_topic);
+      n.getParam("static_obstacle_topic", static_obstacle_topic);
+      n.getParam("obstacle_pub_topic", obstacle_pub_topic)
 
       // Get the transformation frame names
       n.getParam("map_frame", map_frame);
@@ -126,6 +136,10 @@ class RobotSimulator {
       // Determine if we should broadcast
       n.getParam("broadcast_transform", broadcast_transform);
 
+      // Obstacle parameters
+      n.getParam("obstacle_radius", obstacle_radius);
+      n.getParam("obstacle_moving_speed", obstacle_moving_speed);
+
       // Initialize a simulator of the laser scanner
       scan_simulator = ScanSimulator2D(
           scan_beams,
@@ -136,6 +150,10 @@ class RobotSimulator {
           scan_beams,
           scan_field_of_view,
           scan_std_dev);
+
+      obstacle_simulator = ObstacleSimulator(
+        obstacle_radius, 
+        obstacle_moving_speed);
 
       // Noise to add to Odometry twist
       n.getParam("mu_twist", mu_twist);
@@ -152,6 +170,8 @@ class RobotSimulator {
       // Make a publisher for odometry messages
       odom_pub = n.advertise<nav_msgs::Odometry>(odom_topic, 1);
 
+      obstacle_pub = n.advertise<geometry_msgs::Polygon>(obstacle_pub_topic, 1, true);
+
       // Start a timer to output the pose
       update_pose_timer = n.createTimer(ros::Duration(update_pose_rate), &RobotSimulator::update_pose, this);
 
@@ -165,6 +185,8 @@ class RobotSimulator {
 
       // Start a subscriber to listen to new maps
       map_sub = n.subscribe(map_topic, 1, &RobotSimulator::map_callback, this);
+
+      obstacle_rviz_sub = n.subscribe(static_obstacle_topic, 1, &RobotSimulator::obstacle_callback, this);
 
       // Start a subscriber to listen to pose messages
       pose_sub = n.subscribe(pose_topic, 1, &RobotSimulator::pose_callback, this);
@@ -359,6 +381,25 @@ class RobotSimulator {
       ts.header.frame_id = "front_right_hinge";
       ts.child_frame_id = "front_right_wheel";
       br.sendTransform(ts);
+    }
+
+    void obstacle_callback(const geometry_msgs:PointStamped & msg) {
+      obstacle_simulator.add_static_object(msg.point.x, msg.point.y);
+      Obstacle obj = Obstacle(msg.point.x, msg.point.y, obstacle_radius);
+
+      std::vector<Point2D> contour_vector;
+      obj.get_contour(contour_vector);
+
+      geometry_msgs::Polygon obs_msg;
+
+      for (int i=0; i<contour_vector.size(); i++){
+        Point32 pt;
+        pt.x = contour_vector[i].x;
+        pt.y = contour_vector[i].y;
+        obs_msg.points.push_back(pt);
+      }
+
+      obstacle_pub.publish(obs_msg);
     }
 
     void map_callback(const nav_msgs::OccupancyGrid & msg) {

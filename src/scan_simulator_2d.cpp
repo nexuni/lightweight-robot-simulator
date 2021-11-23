@@ -124,7 +124,7 @@ void ScanSimulator2D::set_map(
     } else {
       dt[i] = 0; // Occupied
     }
-  } 
+  }
   DistanceTransform::distance_2d(dt, width, height, resolution);
 }
 

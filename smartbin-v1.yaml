@@ -36,6 +36,9 @@ joy_speed_axis: 1
 joy_angle_axis: 2
 joy_max_speed: 2. # meters/second
 
+obstacle_radius: 0.3
+obstacle_moving_speed: 1.0
+
 # The names of topics to listen and publish to
 joy_topic: "/joy"
 drive_topic: "/drive"
@@ -46,6 +49,8 @@ scan2_topic: "/back_scan"
 pose_topic: "/pose"
 odom_topic: "/odom"
 pose_rviz_topic: "/initialpose"
+static_obstacle_topic: "/clicked_point"
+obstacle_pub_topic: "/obstacles"
 
 # The names of the transformation frames published to
 map_frame: "map"

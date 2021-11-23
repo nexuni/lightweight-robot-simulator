@@ -84,7 +84,7 @@ void DistanceTransform::distance_squared_2d(
     std::vector<double> & input, 
     size_t width, 
     size_t height, 
-    double boundary_value) {
+    double boundary_value) { 
 
   // Transform along the columns
   std::vector<double> col_vec(height + 2);
