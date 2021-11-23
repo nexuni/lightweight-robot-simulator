@@ -113,6 +113,8 @@ void ScanSimulator2D::set_map(
   width = width_;
   resolution = resolution_;
   origin = origin_;
+  map_free_threshold = free_threshold;
+  global_map = map;
   origin_c = std::cos(origin.theta);
   origin_s = std::sin(origin.theta);
 
@@ -157,5 +159,48 @@ int ScanSimulator2D::xy_to_cell(double x, double y) const {
   int row, col;
   xy_to_row_col(x, y, &row, &col);
   return row_col_to_cell(row, col);
+}
+
+void ScanSimulator2D::set_obstacles(
+      std::vector<Obstacle> & obstacle_list){
+
+  std::vector<int> cell_indices;
+  for (int i=0; i<obstacle_list.size(); i++){
+    obstacle_list[i].map_cell_tf(
+      cell_indices, 
+      height, 
+      width,
+      resolution,
+      origin);
+  }
+  for (int i=0; i<cell_indices.size(); i++){
+    dt[cell_indices[i]] = 0;
+  }
+  DistanceTransform::distance_2d(dt, width, height, resolution);
+}
+
+void ScanSimulator2D::set_dynamic_obstacles(
+      std::vector<DynamicObstacle> & obstacle_list){
+
+  std::vector<int> cell_indices;
+  for (int i=0; i<obstacle_list.size(); i++){
+    obstacle_list[i].map_cell_tf(
+      cell_indices, 
+      height, 
+      width,
+      resolution,
+      origin);
+  }
+  for (size_t i = 0; i < global_map.size(); i++) {
+    if (0 <= global_map[i] and global_map[i] <= map_free_threshold) {
+      dt[i] = 99999; // Free
+    } else {
+      dt[i] = 0; // Occupied
+    }
+  }
+  for (int i=0; i<cell_indices.size(); i++){
+    dt[cell_indices[i]] = 0;
+  }
+  DistanceTransform::distance_2d(dt, width, height, resolution);
 }
 

@@ -1,9 +1,7 @@
-/*
-  * obstacle_to_cell_tf(*obstacle_cell_vector, map): This is the function to 
-  transform obstacle to cell location and save it in a vector. 
-*/
-
 #pragma once
+
+#include <random>
+#include "lightweight_robot_simulator/pose_2d.hpp"
 
 namespace lightweight_robot_simulator {
 
@@ -15,9 +13,6 @@ struct Point2D {
 class Obstacle {
 
   protected:
-
-  	double x, y;
-    double radius;
     double obstacle_segments = 24; 
     // how many segments a circle to be divided
     std::vector<Point2D> contour;
@@ -29,14 +24,16 @@ class Obstacle {
     double origin_c;
     double origin_s;
 
-
   public:
     Obstacle() {}
 
     Obstacle(
     	double x_, 
     	double y_,
-      int radius_);
+      double radius_);
+
+    double x, y;
+    double radius;
 
     void map_cell_tf(
         std::vector<int> & cell_indices, 
@@ -48,14 +45,18 @@ class Obstacle {
    	void xy_to_row_col(double x, double y, int * row, int * col) const;
     int row_col_to_cell(int row, int col) const;
     int xy_to_cell(double x, double y) const;
-    void get_contour(std::vector<Point2D> * contour);
+    void update_contour(double x, double y, double radius);
+    void get_contour(std::vector<Point2D> & _contour);
 };
 
 class DynamicObstacle : public Obstacle{
 
   protected:
     double speed;
+    double theta;
+    double init_time, last_update_time;
     int mode; // 0: back and forth, 1: circle
+    double default_circle_radius = 2.0;
 
   public:
     DynamicObstacle() {}
@@ -63,11 +64,13 @@ class DynamicObstacle : public Obstacle{
     DynamicObstacle(
         double x_,
         double y_,
-        int radius_,
+        double theta_,
+        double radius_,
         int mode_, 
-        double speed_);
+        double speed_,
+        double init_time_);
 
-    void get_loc(double * x, double * y, double t) const;
+    void update_loc(double * nx, double * ny, double t);
 };
 
 }

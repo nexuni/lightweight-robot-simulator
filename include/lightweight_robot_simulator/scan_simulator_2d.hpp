@@ -3,6 +3,7 @@
 #include <random>
 
 #include "lightweight_robot_simulator/pose_2d.hpp"
+#include "lightweight_robot_simulator/obstacles.hpp"
 
 namespace lightweight_robot_simulator {
 
@@ -21,9 +22,11 @@ class ScanSimulator2D {
 
     // The distance transform
     double resolution;
+    double map_free_threshold;
     size_t width, height;
     Pose2D origin;
     std::vector<double> dt;
+    std::vector<double> global_map;
 
     // Static output vector
     std::vector<double> scan_output;
@@ -72,6 +75,11 @@ class ScanSimulator2D {
 
     double get_field_of_view() const {return field_of_view;}
     double get_angle_increment() const {return angle_increment;}
+
+    void set_obstacles(
+      std::vector<Obstacle> & obstacle_list);
+    void set_dynamic_obstacles(
+      std::vector<DynamicObstacle> & obstacle_list);
 };
 
 }
