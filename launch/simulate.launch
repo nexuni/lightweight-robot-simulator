@@ -14,9 +14,9 @@
   <param name="robot_description" command="$(find xacro)/xacro --inorder '$(arg robot_xacro)'"/>
 
   <!-- Begin the simulator with the parameters from smartbin-v1.yaml -->
-  <!-- <node pkg="lightweight_robot_simulator" name="lightweight_robot_simulator" type="simulate" output="screen">
+  <node pkg="lightweight_robot_simulator" name="lightweight_robot_simulator" type="simulate" output="screen">
     <rosparam command="load" file="$(find lightweight_robot_simulator)/smartbin-v1.yaml"/>
-  </node> -->
+  </node>
 
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
     <param name="publish_frequency" value="20.0"/>
