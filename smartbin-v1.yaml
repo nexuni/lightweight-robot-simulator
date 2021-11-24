@@ -38,6 +38,7 @@ joy_max_speed: 2. # meters/second
 
 obstacle_radius: 0.3
 obstacle_moving_speed: 1.0
+dynamic_obstacle_mode: 1 # 0 means straight moving, 1 means circular movement
 
 # The names of topics to listen and publish to
 joy_topic: "/joy"
@@ -51,6 +52,7 @@ odom_topic: "/odom"
 pose_rviz_topic: "/initialpose"
 static_obstacle_topic: "/clicked_point"
 obstacle_pub_topic: "/obstacles"
+dynamic_obstacle_topic: "/move_base_simple/goal"
 
 # The names of the transformation frames published to
 map_frame: "map"
