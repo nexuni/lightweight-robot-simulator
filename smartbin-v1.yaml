@@ -55,7 +55,7 @@ obstacle_pub_topic: "/obstacles"
 dynamic_obstacle_topic: "/move_base_simple/goal"
 
 # The names of the transformation frames published to
-map_frame: "odom"
+map_frame: "map"
 base_frame: "base_link"
 scan_frame: "laser"
 scan2_frame: "laser2"
