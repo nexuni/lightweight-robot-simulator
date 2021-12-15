@@ -76,12 +76,13 @@ class RobotSimulator {
     ros::Publisher scan_pub;
     ros::Publisher scan2_pub;
     ros::Publisher odom_pub;
+    ros::Publisher ground_truth_pub;
     ros::Publisher obstacle_pub;
 
     // Noise to add to odom sensor
     std::mt19937 noise_generator;    
     std::normal_distribution<double> twist_x_lin_dist, twist_x_ang_dist,
-      twist_y_ang_dist, twist_z_ang_dist;
+      twist_y_ang_dist, twist_z_ang_dist, pose_x_lin_dist, pose_z_ang_dist;
     std::vector<double> mu_twist;
 
   public:
@@ -99,7 +100,8 @@ class RobotSimulator {
       // Get the topic names
       std::string joy_topic, drive_topic, map_topic, 
         scan_topic, pose_topic, pose_rviz_topic, odom_topic, scan2_topic, 
-        static_obstacle_topic, obstacle_pub_topic, dynamic_obstacle_topic;
+        static_obstacle_topic, obstacle_pub_topic, dynamic_obstacle_topic, 
+        ground_truth_topic;
       n.getParam("joy_topic", joy_topic);
       n.getParam("drive_topic", drive_topic);
       n.getParam("map_topic", map_topic);
@@ -107,6 +109,7 @@ class RobotSimulator {
       n.getParam("scan2_topic", scan2_topic);
       n.getParam("pose_topic", pose_topic);
       n.getParam("odom_topic", odom_topic);
+      n.getParam("ground_truth_topic", ground_truth_topic);
       n.getParam("pose_rviz_topic", pose_rviz_topic);
       n.getParam("static_obstacle_topic", static_obstacle_topic);
       n.getParam("obstacle_pub_topic", obstacle_pub_topic);
@@ -174,6 +177,7 @@ class RobotSimulator {
 
       // Make a publisher for odometry messages
       odom_pub = n.advertise<nav_msgs::Odometry>(odom_topic, 1);
+      ground_truth_pub = n.advertise<nav_msgs::Odometry>(ground_truth_topic, 1);
 
       obstacle_pub = n.advertise<geometry_msgs::PolygonStamped>(obstacle_pub_topic, 1, true);
 
@@ -235,16 +239,30 @@ class RobotSimulator {
           current_seconds - previous_seconds);
       previous_seconds = current_seconds;
 
+      // Add noise to pose
+      double x_noise = 0.0;
+      double yaw_noise = 0.0
+      if (mu_pose[0] > 0) {
+          x_noise = pose_x_lin_dist(noise_generator);
+          yaw_noise = pose_z_ang_dist(noise_generator);
+      }
+
       // Convert the pose into a transformation
       geometry_msgs::Transform t;
-      t.translation.x = pose.x;
+      t.translation.x = pose.x + x_noise;
       t.translation.y = pose.y;
+
+      // With noise
       tf2::Quaternion quat;
-      quat.setEuler(0., 0., pose.theta);
+      quat.setEuler(0., 0., pose.theta + yaw_noise);
       t.rotation.x = quat.x();
       t.rotation.y = quat.y();
       t.rotation.z = quat.z();
       t.rotation.w = quat.w();
+
+      // Ground truth
+      tf2::Quaternion gt_quat;
+      quat.setEuler(0., 0., pose.theta);
 
       // Add a header to the transformation
       geometry_msgs::TransformStamped ts;
@@ -253,12 +271,29 @@ class RobotSimulator {
       ts.header.frame_id = map_frame;
       ts.child_frame_id = base_frame;
 
+      // Publish Ground Truth
+      nav_msgs::Odometry gt_odom;
+      gt_odom.header.stamp = timestamp;
+      gt_odom.header.frame_id = map_frame;
+      gt_odom.child_frame_id = base_frame;
+      gt_odom.pose.pose.position.x = pose.x;
+      gt_odom.pose.pose.position.y = pose.y;
+      gt_odom.pose.pose.orientation.x = gt_quat.x();
+      gt_odom.pose.pose.orientation.y = gt_quat.y();
+      gt_odom.pose.pose.orientation.z = gt_quat.z();
+      gt_odom.pose.pose.orientation.w = gt_quat.w();
+      gt_odom.twist.twist.linear.x = speed;
+      gt_odom.twist.twist.angular.z = 
+        AckermannKinematics::angular_velocity(speed, steering_angle, wheelbase);
+
+      ground_truth_pub.publish(gt_odom);
+
       // Make an odom message as well
       nav_msgs::Odometry odom;
       odom.header.stamp = timestamp;
       odom.header.frame_id = map_frame;
       odom.child_frame_id = base_frame;
-      odom.pose.pose.position.x = pose.x;
+      odom.pose.pose.position.x = pose.x + x_noise;
       odom.pose.pose.position.y = pose.y;
       odom.pose.pose.orientation.x = quat.x();
       odom.pose.pose.orientation.y = quat.y();
@@ -267,13 +302,13 @@ class RobotSimulator {
       odom.twist.twist.linear.x = speed;
       odom.twist.twist.angular.z = 
         AckermannKinematics::angular_velocity(speed, steering_angle, wheelbase);
-        
+
       // Add noise to odom
       if (mu_twist[0] > 0) {
           odom.twist.twist.linear.x += twist_x_lin_dist(noise_generator);
           odom.twist.twist.angular.x += twist_x_ang_dist(noise_generator);
-          odom.twist.twist.angular.x += twist_x_ang_dist(noise_generator);
-          odom.twist.twist.angular.x += twist_x_ang_dist(noise_generator);
+          odom.twist.twist.angular.y += twist_y_ang_dist(noise_generator);
+          odom.twist.twist.angular.z += twist_z_ang_dist(noise_generator);
       }
 
       // Publish them

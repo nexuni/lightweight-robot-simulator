@@ -49,13 +49,14 @@ scan_topic: "/front_scan"
 scan2_topic: "/back_scan"
 pose_topic: "/pose"
 odom_topic: "/odom"
+ground_truth_topic: "/ground_truth"
 pose_rviz_topic: "/initialpose"
 static_obstacle_topic: "/clicked_point"
 obstacle_pub_topic: "/obstacles"
 dynamic_obstacle_topic: "/move_base_simple/goal"
 
 # The names of the transformation frames published to
-map_frame: "map"
+map_frame: "odom"
 base_frame: "base_link"
 scan_frame: "laser"
 scan2_frame: "laser2"
@@ -64,4 +65,5 @@ scan2_frame: "laser2"
 broadcast_transform: true
 
 # Noise to add to odometry twist (first 3 are linear, last 3 are angular)
-mu_twist: [0., 0., 0., 0. 0., 0.]
+mu_twist: [0., 0., 0., 0., 0., 0.]
+mu_pose: [0.5, 0., 0., 0., 0., 0.5]
