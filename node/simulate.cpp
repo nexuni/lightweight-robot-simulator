@@ -83,7 +83,7 @@ class RobotSimulator {
     std::mt19937 noise_generator;    
     std::normal_distribution<double> twist_x_lin_dist, twist_x_ang_dist,
       twist_y_ang_dist, twist_z_ang_dist, pose_x_lin_dist, pose_z_ang_dist;
-    std::vector<double> mu_twist;
+    std::vector<double> mu_twist, mu_pose;
 
   public:
 
@@ -241,7 +241,7 @@ class RobotSimulator {
 
       // Add noise to pose
       double x_noise = 0.0;
-      double yaw_noise = 0.0
+      double yaw_noise = 0.0;
       if (mu_pose[0] > 0) {
           x_noise = pose_x_lin_dist(noise_generator);
           yaw_noise = pose_z_ang_dist(noise_generator);
