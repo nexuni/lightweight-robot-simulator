@@ -80,7 +80,7 @@ class RobotSimulator {
     ros::Publisher obstacle_pub;
 
     // Noise to add to odom sensor
-    std::mt19937 noise_generator;    
+    std::mt19937 noise_generator, noise_generator_pose;    
     std::normal_distribution<double> twist_x_lin_dist, twist_x_ang_dist,
       twist_y_ang_dist, twist_z_ang_dist, pose_x_lin_dist, pose_z_ang_dist;
     std::vector<double> mu_twist, mu_pose;
@@ -171,6 +171,12 @@ class RobotSimulator {
       twist_y_ang_dist = std::normal_distribution<double>(0., mu_twist[4]);
       twist_z_ang_dist = std::normal_distribution<double>(0., mu_twist[5]);
 
+      // Noise to add to Pose
+      n.getParam("mu_pose", mu_pose);
+      noise_generator_pose = std::mt19937(std::random_device{}());
+      pose_x_lin_dist = std::normal_distribution<double>(0., mu_pose[0]);
+      pose_z_ang_dist = std::normal_distribution<double>(0., mu_pose[5]);
+
       // Make a publisher for laser scan messages
       scan_pub = n.advertise<sensor_msgs::LaserScan>(scan_topic, 1);
       scan2_pub = n.advertise<sensor_msgs::LaserScan>(scan2_topic, 1);
@@ -243,8 +249,8 @@ class RobotSimulator {
       double x_noise = 0.0;
       double yaw_noise = 0.0;
       if (mu_pose[0] > 0) {
-          x_noise = pose_x_lin_dist(noise_generator);
-          yaw_noise = pose_z_ang_dist(noise_generator);
+          x_noise = pose_x_lin_dist(noise_generator_pose);
+          yaw_noise = pose_z_ang_dist(noise_generator_pose);
       }
 
       // Convert the pose into a transformation

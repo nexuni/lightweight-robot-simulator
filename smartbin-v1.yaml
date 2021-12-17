@@ -1,6 +1,6 @@
 # The distance between the front and
 # rear axle of the racecar
-wheelbase: 0.38 # meters
+wheelbase: 0.32 # meters
 
 # Limits on the speed and steering angle
 max_speed: 4. # meters/second
@@ -66,4 +66,4 @@ broadcast_transform: true
 
 # Noise to add to odometry twist (first 3 are linear, last 3 are angular)
 mu_twist: [0., 0., 0., 0., 0., 0.]
-mu_pose: [0.5, 0., 0., 0., 0., 0.5]
+mu_pose: [0.005, 0., 0., 0., 0., 0.005]
