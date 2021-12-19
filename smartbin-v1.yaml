@@ -3,8 +3,8 @@
 wheelbase: 0.32 # meters
 
 # Limits on the speed and steering angle
-max_speed: 4. # meters/second
-max_steering_angle: 0.494 # radians
+max_speed: 0.3 # meters/second
+max_steering_angle: 0.35 # radians
 
 # The rate at which the pose and the lidar publish
 update_pose_rate: 0.002
@@ -51,9 +51,9 @@ pose_topic: "/pose"
 odom_topic: "/odom"
 ground_truth_topic: "/ground_truth"
 pose_rviz_topic: "/initialpose"
-static_obstacle_topic: "/clicked_point"
+static_obstacle_topic: "/clicked_point_commented"
 obstacle_pub_topic: "/obstacles"
-dynamic_obstacle_topic: "/move_base_simple/goal"
+dynamic_obstacle_topic: "/move_base_simple/goal_commented"
 
 # The names of the transformation frames published to
 map_frame: "odom"
@@ -66,4 +66,4 @@ broadcast_transform: true
 
 # Noise to add to odometry twist (first 3 are linear, last 3 are angular)
 mu_twist: [0., 0., 0., 0., 0., 0.]
-mu_pose: [0.005, 0., 0., 0., 0., 0.005]
+mu_pose: [0.0, 0., 0., 0., 0., 0.0]
