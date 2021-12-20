@@ -42,7 +42,7 @@ dynamic_obstacle_mode: 1 # 0 means straight moving, 1 means circular movement
 
 # The names of topics to listen and publish to
 joy_topic: "/joy"
-drive_topic: "/wdriver/low_level/ackermann_cmd_mux/output"
+drive_topic: "/ackermann_cmd"
 map_topic: "/sim_map"
 distance_transform_topic: "/dt"
 scan_topic: "/front_scan"
