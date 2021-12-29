@@ -32,12 +32,15 @@ class RobotSimulator {
     double wheelbase;
     double speed;
     double steering_angle;
+    double self_rotate_angle;
+    double self_rotate_angle_increment;
     double previous_seconds;
     double scan_distance_to_base_link;
     double scan2_distance_to_base_link;
     double max_speed, max_steering_angle;
     double obstacle_radius, obstacle_moving_speed;
     int dynamic_obstacle_mode;
+    int prev_anchor_status = 0;
 
     // A simulator of the laser
     ScanSimulator2D scan_simulator, scan2_simulator;
@@ -45,7 +48,8 @@ class RobotSimulator {
     double map_free_threshold;
 
     // Joystick parameters
-    int joy_speed_axis, joy_angle_axis;
+    int joy_speed_axis, joy_angle_axis, joy_self_rotate_axis,
+      joy_set_anchor;
     double joy_max_speed;
 
     // A ROS node
@@ -78,6 +82,7 @@ class RobotSimulator {
     ros::Publisher odom_pub;
     ros::Publisher ground_truth_pub;
     ros::Publisher obstacle_pub;
+    ros::Publisher traj_anchor_pub;
 
     // Noise to add to odom sensor
     std::mt19937 noise_generator, noise_generator_pose;    
@@ -97,11 +102,14 @@ class RobotSimulator {
       steering_angle = 0;
       previous_seconds = ros::Time::now().toSec();
 
+      self_rotate_angle = 0.0;
+      self_rotate_angle_increment = 0.1;
+
       // Get the topic names
       std::string joy_topic, drive_topic, map_topic, 
         scan_topic, pose_topic, pose_rviz_topic, odom_topic, scan2_topic, 
         static_obstacle_topic, obstacle_pub_topic, dynamic_obstacle_topic, 
-        ground_truth_topic;
+        ground_truth_topic, traj_anchor_topic;
       n.getParam("joy_topic", joy_topic);
       n.getParam("drive_topic", drive_topic);
       n.getParam("map_topic", map_topic);
@@ -109,6 +117,7 @@ class RobotSimulator {
       n.getParam("scan2_topic", scan2_topic);
       n.getParam("pose_topic", pose_topic);
       n.getParam("odom_topic", odom_topic);
+      n.getParam("traj_anchor_topic", traj_anchor_topic);
       n.getParam("ground_truth_topic", ground_truth_topic);
       n.getParam("pose_rviz_topic", pose_rviz_topic);
       n.getParam("static_obstacle_topic", static_obstacle_topic);
@@ -140,8 +149,10 @@ class RobotSimulator {
       n.getParam("joy", joy);
       n.getParam("joy_speed_axis", joy_speed_axis);
       n.getParam("joy_angle_axis", joy_angle_axis);
+      n.getParam("joy_self_rotate_axis", joy_self_rotate_axis);
       n.getParam("joy_max_speed", joy_max_speed);
-
+      n.getParam("joy_set_anchor", joy_set_anchor);
+      
       // Determine if we should broadcast
       n.getParam("broadcast_transform", broadcast_transform);
 
@@ -180,6 +191,8 @@ class RobotSimulator {
       // Make a publisher for laser scan messages
       scan_pub = n.advertise<sensor_msgs::LaserScan>(scan_topic, 1);
       scan2_pub = n.advertise<sensor_msgs::LaserScan>(scan2_topic, 1);
+
+      traj_anchor_pub = n.advertise<geometry_msgs::PointStamped>(traj_anchor_topic, 1);
 
       // Make a publisher for odometry messages
       odom_pub = n.advertise<nav_msgs::Odometry>(odom_topic, 1);
@@ -422,11 +435,27 @@ class RobotSimulator {
     }
 
     void joy_callback(const sensor_msgs::Joy & msg) {
-      set_speed(
-          joy_max_speed * msg.axes[joy_speed_axis]);
-      set_steering_angle(
-          max_steering_angle * msg.axes[joy_angle_axis],
-          ros::Time::now());
+      // set_speed(
+      //     joy_max_speed * msg.axes[joy_speed_axis]);
+      // set_steering_angle(
+      //     max_steering_angle * msg.axes[joy_angle_axis],
+      //     ros::Time::now());
+
+      if (msg.buttons[joy_set_anchor] && !prev_anchor_status){
+        geometry_msgs::PointStamped pt;
+        pt.point.x = pose.x;
+        pt.point.y = pose.y;
+        pt.header.stamp = ros::Time::now();
+        pt.header.frame_id = "map";
+        traj_anchor_pub.publish(pt);
+      }
+
+      prev_anchor_status = msg.buttons[joy_set_anchor];
+
+      self_rotate_angle = msg.axes[joy_self_rotate_axis] * self_rotate_angle_increment + pose.theta;
+      set_self_rotate_angle(
+        self_rotate_angle,
+        ros::Time::now());
     }
 
     void set_speed(double speed_) {
@@ -451,6 +480,22 @@ class RobotSimulator {
       ts.header.frame_id = "front_right_hinge";
       ts.child_frame_id = "front_right_wheel";
       br.sendTransform(ts);
+    }
+
+    void set_self_rotate_angle(double self_rotate_angle, ros::Time timestamp) {
+      geometry_msgs::Pose p;
+
+      tf2::Quaternion quat;
+      quat.setEuler(0., 0., self_rotate_angle);
+
+      p.position.x = pose.x;
+      p.position.y = pose.y;
+      p.orientation.x = quat.x();
+      p.orientation.y = quat.y();
+      p.orientation.z = quat.z();
+      p.orientation.w = quat.w();
+
+      pose_callback(p);
     }
 
     void publish_obstacle(double x, double y, double radius){

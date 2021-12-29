@@ -43,7 +43,7 @@ obstacle_moving_speed: 1.0
 dynamic_obstacle_mode: 1 # 0 means straight moving, 1 means circular movement
 
 # The names of topics to listen and publish to
-joy_topic: "/joy"
+joy_topic: "/wdriver/joy"
 drive_topic: "/wdriver/low_level/ackermann_cmd_mux/output"
 map_topic: "/sim_map"
 distance_transform_topic: "/dt"
@@ -59,7 +59,7 @@ obstacle_pub_topic: "/obstacles"
 dynamic_obstacle_topic: "/move_base_simple/goal_commented"
 
 # The names of the transformation frames published to
-map_frame: "odom"
+map_frame: "map"
 base_frame: "base_link"
 scan_frame: "laser"
 scan2_frame: "laser2"
